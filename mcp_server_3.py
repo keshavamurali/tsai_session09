@@ -226,8 +226,8 @@ async def duckduckgo_search_results(input: SearchInput, ctx: Context) -> str:
 
 
 @mcp.tool()
-async def download_raw_html_from_url(input: UrlInput, ctx: Context) -> str:
-    """Fetch webpage content. Usage: input={"input": {"url": "https://example.com"} } result = await mcp.call_tool('download_raw_html_from_url', input)"""
+async def fetch_webpage_content(input: UrlInput, ctx: Context) -> str:
+    """Fetch webpage content. Usage: input={"input": {"url": "https://example.com"} } resut = await mcp.call_tool('fetch_webpage_content', input)"""
     return PythonCodeOutput(result=await fetcher.fetch_and_parse(input.url, ctx))
 
 

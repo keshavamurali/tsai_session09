@@ -115,9 +115,9 @@ async def solve():
 ```python
 async def solve():
     # FUNCTION_CALL: 1
-    """Return clean webpage content. Usage: input={{"input": {{"url": "https://example.com"}}}} result = await mcp.call_tool('extract_webpage', input)"""
+    """Return clean webpage content. Usage: input={{"input": {{"url": "https://example.com"}}}} result = await mcp.call_tool('web_content_fetcher', input)"""
     input = {{"url": "https://www.f1.com"}}
-    result = await mcp.call_tool(extract_webpage, input)  # from mcp_server_2
+    result = await mcp.call_tool(web_content_fetcher, input)  # from mcp_server_2
 
     # FURTHER_PROCESSING_REQUIRED
     return f"FURTHER_PROCESSING_REQUIRED: {{result}}"
@@ -132,8 +132,8 @@ async def solve():
     input = {{"input": {{"query": "DLF apartment Capbridge"}}}}
     result = await mcp.call_tool('search_stored_documents', input)
 
-    # FURTHER_PROCESSING_REQUIRED
-    return f"FURTHER_PROCESSING_REQUIRED: {{result}}"
+    # FINAL_ANSWER
+    return f"FINAL_ANSWER: {{result}}"
 
 ```
 

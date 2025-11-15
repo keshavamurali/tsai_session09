@@ -13,7 +13,7 @@ from pathlib import Path
 import requests
 from markitdown import MarkItDown
 import time
-from models import AddInput, AddOutput, SqrtInput, SqrtOutput, StringsToIntsInput, StringsToIntsOutput, ExpSumInput, ExpSumOutput, PythonCodeInput, PythonCodeOutput, UrlInput, FilePathInput, MarkdownInput, MarkdownOutput, ChunkListOutput, SearchDocumentsInput
+from models import AddInput, AddOutput, SqrtInput, SqrtOutput, StringsToIntsInput, StringsToIntsOutput, ExpSumInput, ExpSumOutput, PythonCodeInput, PythonCodeOutput, UrlInput, FilePathInput, MarkdownInput, MarkdownOutput, ChunkListOutput, SearchDocumentsInput, SummarizeTextInput, SummarizeTextOutput
 from tqdm import tqdm
 import hashlib
 from pydantic import BaseModel
@@ -234,6 +234,53 @@ def extract_pdf(input: FilePathInput) -> MarkdownOutput:
     markdown = replace_images_with_captions(markdown)
     return MarkdownOutput(markdown=markdown)
 
+@mcp.tool()
+def summarize_text(input: SummarizeTextInput) -> SummarizeTextOutput:
+    """Summarize text. Usage: input={"input": {"text": "your text"}} result = await mcp.call_tool('summarize_text', input)"""
+    prompt = f"""
+    You are a text summarizer. Summarize the given text into a concise summary. If it is a JSON and has a key called "Summary", then Summarize only that text.
+    {input.text}
+    Return the summary in the following format:
+    {{"summary": "summary of the text"}}
+    """
+    result = requests.post(OLLAMA_CHAT_URL, json={
+        "model": PHI_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False
+    })
+    result.raise_for_status()
+    #summary_text = result.json().get("message", {}).get("content", "").strip()
+    return SummarizeTextOutput(summary=summary_text)
+
+# @mcp.tool()
+# def summarize_text(input: MarkdownInput) -> MarkdownOutput:
+#     """Summarize text. Usage: input={"input": {"text": "your text"}} result = await mcp.call_tool('summarize_text', input)"""
+#     prompt = f"""
+#     You are a text summarizer. Summarize the given text into a concise summary. If it is a JSON and has a key called "Summary", then Summarize only that text.
+#     {input.text}
+#     Return the summary in the following format:
+#     {{"summary": "summary of the text"}}
+#     """
+#     result = requests.post(OLLAMA_CHAT_URL, json={
+#         "model": PHI_MODEL,
+#         "messages": [{"role": "user", "content": prompt}],
+#         "stream": False
+#     })
+#     result.raise_for_status()
+#     summary_text = result.json().get("message", {}).get("content", "").strip()
+    
+#     # Try to extract summary from JSON if present
+#     try:
+#         import json
+#         summary_json = json.loads(summary_text)
+#         if "summary" in summary_json:
+#             summary_text = summary_json["summary"]
+#     except (json.JSONDecodeError, KeyError):
+#         # If not JSON, use the text as-is
+#         pass
+    
+#     return MarkdownOutput(markdown=summary_text)
+
 
 def semantic_merge(text: str) -> list[str]:
     """Splits text semantically using LLM: detects second topic and reuses leftover intelligently."""
@@ -340,7 +387,7 @@ def process_documents():
 
             elif ext in [".html", ".htm", ".url"]:
                 mcp_log("INFO", f"Using Trafilatura to extract {file.name}")
-                markdown = extract_webpage(UrlInput(url=file.read_text().strip())).markdown
+                markdown = convert_webpage_url_into_markdown(UrlInput(url=file.read_text().strip())).markdown
 
             else:
                 # Fallback to MarkItDown for other formats
